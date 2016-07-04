@@ -9,14 +9,14 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='bigquery_utils',
+    name='bigquery_tools',
     version='0.1',
 
     description='A set of utilities for querying and reading data from Google BigQuery',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/fuzzylabs/bigquery_utils',
+    url='https://github.com/fuzzylabs/bigquery_tools',
 
     # Author details
     author='Paulius Danenas',
