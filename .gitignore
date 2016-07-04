@@ -1,0 +1,7 @@
+/.idea/**
+/build/**
+/dist/**
+*.py[cod]
+*$py.class
+*.so
+
