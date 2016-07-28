@@ -3,11 +3,10 @@
 __author__ = 'Paulius Danenas'
 
 import time
-
 from googleapiclient.errors import HttpError
-
 from output_handler import ColumnarResultHandler
 from table_reader import TableReadThread
+from progressbar import Counter, ProgressBar, Timer
 
 READ_CHUNK_SIZE = 64 * 1024
 
@@ -31,15 +30,25 @@ class QueryReader:
             if isinstance(result_handler, ColumnarResultHandler):
                 result_handler.set_columns(self.columns)
             page_token = None
+            widgets = ['Retrieved rows: ', Counter(), ' (', Timer(), ')']
+            pbar = ProgressBar(widgets=widgets)
+            pbar.start()
+            pbar.maxval = 0
+            i = 0
             while True:
                 page = query_request.getQueryResults(pageToken=page_token,
                                                      **query_job['jobReference']).execute(num_retries=num_retries)
                 rows = page.get('rows', [])
+                if rows:
+                    i += len(rows)
+                    pbar.maxval = i
+                    pbar.update(i)
                 result_handler.handle_rows(rows)
                 page_token = page.get('pageToken')
                 if not page_token:
                     result_handler.finish()
                     break
+            pbar.finish()
         except HttpError as err:
             # If the error is a rate limit or connection error, wait and try again.
             if err.resp.status in [403, 500, 503]:

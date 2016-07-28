@@ -8,6 +8,7 @@ from apiclient.errors import HttpError
 from auth import BigQuery_Auth
 from argparse import ArgumentParser
 from datetime import datetime
+from progressbar import Percentage, Bar, ProgressBar, Timer
 import logging
 import os
 import sys
@@ -113,15 +114,19 @@ class TableReader:
         # Read the current time and use that for the snapshot time.
         # This will prevent us from getting inconsistent results when the
         # underlying table is changing.
+        _, row_count, _, _ = self.get_table_info()
         if snapshot_time is None and not '@' in self.table_id:
             self.snapshot_time = int(time.time() * 1000)
         self.snapshot_time = snapshot_time
+        pbar = ProgressBar(widgets=[Percentage(), Bar(), Timer()], maxval=row_count).start()
         while True:
             is_done, rows = self.read_one_page()
             if rows:
                 result_handler.handle_rows(rows)
+                pbar.update(len(rows))
             if is_done:
                 result_handler.finish()
+                pbar.finish()
                 return
 
     def parallel_indexed_read(self, partition_count, output_dir, output_format='csv', sep=';'):
@@ -147,8 +152,8 @@ class TableReader:
         for index in range(partition_count):
             threads[index].join()
 
-    # Table must be partitioned to use this technique!
     def parallel_partitioned_read(self, partition_count, output_dir, output_format='csv', sep=';'):
+        ''' Table must be partitioned to use this technique! '''
         snapshot_time = int(time.time() * 1000)
         threads = []
         for index in range(partition_count):

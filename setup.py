@@ -38,7 +38,7 @@ setup(
     ],
     keywords='bigquery query read utilities',
     packages=find_packages(exclude=['build', 'docs', 'tests']),
-    install_requires=['google-api-python-client'],
+    install_requires=['google-api-python-client', 'progressbar'],
     # Use if you want to build command-line tools as well
     # entry_points={
     #     'console_scripts': [
