@@ -20,6 +20,7 @@ from apiclient import discovery
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client import tools
 from oauth2client.file import Storage
+from oauth2client.client import GoogleCredentials
 
 HAS_CRYPTO = False
 try:
@@ -40,8 +41,8 @@ class BigQuery_Auth:
     credentials = 'bigquery_credentials.dat'
     """
 
-    def __init__(self, service_acc, client_secrets, credentials=None, key_file=None):
-        self.SERVICE_ACCT = (service_acc)
+    def __init__(self, service_acc, client_secrets = None, credentials=None, key_file=None):
+        self.SERVICE_ACCT = service_acc
         self.CLIENT_SECRETS = client_secrets
         self.CREDENTIALS_FILE = credentials
         self.KEY_FILE = key_file
@@ -63,6 +64,7 @@ class BigQuery_Auth:
         Will prompt the user to authorize the client when run the first time.
         Saves the credentials in self.CREDENTIALS_FILE.
         '''
+        assert (self.CLIENT_SECRETS is not None)
         flow = flow_from_clientsecrets(self.CLIENT_SECRETS, scope=BIGQUERY_SCOPE)
         storage = Storage(os.path.expanduser(self.CREDENTIALS_FILE))
         credentials = storage.get()
@@ -101,7 +103,10 @@ class BigQuery_Auth:
 
     def build_bq_client(self):
         '''Constructs a bigquery client object.'''
-        return discovery.build('bigquery', 'v2', http=self.get_creds().authorize(httplib2.Http()))
+        if self.CLIENT_SECRETS is not None:
+            return discovery.build('bigquery', 'v2', http=self.get_creds().authorize(httplib2.Http()))
+        else:
+            return discovery.build('bigquery', 'v2', credentials=GoogleCredentials.get_application_default())
 
     def build_gcs_client(self):
         '''Constructs a Google Cloud Storage client object.'''
