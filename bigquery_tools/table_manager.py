@@ -21,16 +21,14 @@ class TableManager:
         table = {'tableReference': table_ref,
                  'schema': schema
                  }
-        table = self.service.tables().insert(
-            body=table, **dataset_ref).execute()
+        table = self.service.tables().insert(body=table, **dataset_ref).execute()
         return table
 
     def drop_table(self, dataset_id, table, project_id=None):
         dataset_ref = {'datasetId': dataset_id,
                        'projectId': project_id,
                        'tableId': table}
-        table = self.service.tables().delete(
-            **dataset_ref).execute()
+        table = self.service.tables().delete(**dataset_ref).execute()
         return table
 
     def dataset_exists(self, project_id, dataset_id):

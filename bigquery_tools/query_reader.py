@@ -17,13 +17,33 @@ class QueryReader:
         self.bq_service = auth.build_bq_client()
         self.columns = None
 
-    def read(self, result_handler, query, timeout=10000, num_retries=5):
+    def read(self, result_handler, query, timeout=10000, num_retries=5, inlineUDF=None, udfURI=None):
+        """
+        Retrieves query results
+        :param result_handler: ResultHandler which is used to handle results
+        :param query: BigQuery query which is executed
+        :param timeout: Maximum timeout
+        :param num_retries: Maximum numer of retries
+        :param inlineUDF: UDF code in Javascript, which is associated with particular BQ query/table.
+        Note: if this is set, it will be preferred over udfURI property
+        :param udfURI: An array of URIs which point to the relevant UDF resources (e.g., Javascript files in Google Cloud)
+        E.g.: [gs://bucket/my-udf.js]
+        Note: if this is NOT set, inlineUDF property will be used (if set)
+        """
         try:
             query_request = self.bq_service.jobs()
+            udfResource = []
+            if inlineUDF:
+                udfResource.append({'inlineCode': inlineUDF})
+            else:
+                if udfURI:
+                    udfResource.append({'resourceUri': udfURI})
+
             query_data = {
                 'query': query,
                 'timeoutMs': timeout,
                 'allowLargeResults': True,
+                'userDefinedFunctionResources': udfResource
             }
             query_job = query_request.query(projectId=self.project_id, body=query_data).execute()
             self.columns = [field['name'] for field in query_job['schema']['fields']]
